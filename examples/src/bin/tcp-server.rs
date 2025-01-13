@@ -1,39 +1,47 @@
 use ptls::Ptls;
 use rsa::{pkcs1::DecodeRsaPrivateKey, RsaPrivateKey};
+use tokio::net::TcpListener;
 
 #[tokio::main]
-async fn main() {
-    let server_private =
-        RsaPrivateKey::read_pkcs1_pem_file("./certs/private.pem").expect("Cannot read private key");
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    // Load server private key
+    let server_private = RsaPrivateKey::read_pkcs1_pem_file("./certs/private.pem")
+        .expect("Cannot read private key");
 
-    let server = tokio::net::TcpListener::bind("localhost:7811")
-        .await
-        .unwrap();
+    // Start TCP listener
+    let listener = TcpListener::bind("localhost:7811").await?;
+
+    println!("Server is running on localhost:7811");
 
     loop {
-        let mut peer = if let Ok((peer, _)) = server.accept().await {
-            peer
+        if let Ok((peer, addr)) = listener.accept().await {
+            println!("Accepted connection from {addr}");
+
+            // Spawn a task to handle the connection
+            tokio::spawn(handle_connection(peer, server_private.clone()));
         } else {
-            continue;
-        };
+            eprintln!("Failed to accept connection");
+        }
+    }
+}
 
-        // Handle the connection.
-        tokio::spawn({
-            let server_private = server_private.clone();
-            async move {
-                let mut server_ptls = Ptls::new(peer.split(), server_private);
-                // Upgrade the TCP connection to a pTLS-encrypted tunnel.
-                if server_ptls.handshake().await.is_err() {
-                    return;
-                }
+async fn handle_connection(
+    mut peer: tokio::net::TcpStream,
+    server_private: RsaPrivateKey,
+) {
+    let mut server_ptls = Ptls::new(peer.split(), server_private);
 
-                while let Ok(data) = server_ptls.receive().await {
-                    match std::str::from_utf8(&data) {
-                        Ok(str) => println!("Received {str:?}"),
-                        Err(_) => println!("Received bytes {data:?}"),
-                    }
-                }
-            }
-        });
+    if let Err(e) = server_ptls.handshake().await {
+        eprintln!("Handshake failed: {e}");
+        return;
+    }
+
+    println!("Handshake successful");
+
+    while let Ok(data) = server_ptls.receive().await {
+        match std::str::from_utf8(&data) {
+            Ok(message) => println!("Received: {message}"),
+            Err(_) => println!("Received non-UTF8 data: {data:?}"),
+        }
     }
 }
