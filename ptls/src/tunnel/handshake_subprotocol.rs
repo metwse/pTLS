@@ -88,7 +88,7 @@ where
                     let mut payload = vec![HandshakeContentType::ServerHello as u8];
                     payload.append(
                         &mut bincode::serialize(&server_hello)
-                        .map_err(|_| Error::UnexceptedError)?
+                            .map_err(|_| Error::UnexceptedError)?,
                     );
 
                     self.send_internal(ContentType::Handshake, &payload).await?;

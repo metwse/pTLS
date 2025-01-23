@@ -19,5 +19,8 @@ pub mod sub_protocol;
 /// Items used for payload sending or receiving.
 pub mod payload;
 
+/// Items used for signing/verifying public keys.
+pub mod trusted_authority;
+
 #[doc(inline)]
 pub use payload::MAX_PAYLOAD_LENGTH;
