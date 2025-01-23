@@ -1,5 +1,5 @@
 use crate::{
-    crypto::CryptoError, io_wrapper::IoWrapperError, sub_protocol::handshake::HandshakeError,
+    crypto::CryptoError, io_wrapper::IoWrapperError, sub_protocol::handshake::HandshakeError, trusted_authority::TrustedAuthorityError,
 };
 use rsa::Error as RsaError;
 use std::{error::Error as StdError, fmt::Display};
@@ -11,6 +11,7 @@ pub enum Error {
     Crypto(CryptoError),
     IoWrapper(IoWrapperError),
     Rsa(RsaError),
+    TrustedAuthority(TrustedAuthorityError),
     InvalidPayload,
     UnexceptedError,
     InvalidPublicKey,
@@ -26,6 +27,7 @@ impl Display for Error {
             Self::Crypto(crypto_error) => crypto_error.fmt(f),
             Self::IoWrapper(io_wrapper_error) => io_wrapper_error.fmt(f),
             Self::Rsa(rsa_error) => rsa_error.fmt(f),
+            Self::TrustedAuthority(trusted_authority_error) => trusted_authority_error.fmt(f),
             Self::InvalidPayload => f.write_str("cannot decode the payload"),
             Self::UnexceptedError => f.write_str("unexcepted error"),
             Self::InvalidPublicKey => f.write_str("cannot decode the provided public key"),
@@ -34,4 +36,4 @@ impl Display for Error {
     }
 }
 
-error_impl_from!(Error; Handshake, Crypto, IoWrapper, Rsa);
+error_impl_from!(Error; Handshake, Crypto, IoWrapper, Rsa, TrustedAuthority);

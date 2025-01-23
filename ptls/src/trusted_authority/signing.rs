@@ -29,7 +29,8 @@ impl TrustedAuthority {
         let mut payload = signed_public_key.public_key.to_public_key_der()?.to_vec();
         payload.extend_from_slice(&signed_public_key.expries_at.to_le_bytes());
 
-        self.verifying.verify(&payload, &signed_public_key.signature)?;
+        self.verifying
+            .verify(&payload, &signed_public_key.signature)?;
 
         Ok(())
     }
@@ -42,14 +43,18 @@ mod tests {
 
     #[test]
     fn signing() {
-        let trusted_authority = TrustedAuthority::try_from_private_key(random_private_key!(), HashFunction::Sha256).unwrap();
+        let trusted_authority =
+            TrustedAuthority::try_from_private_key(random_private_key!(), HashFunction::Sha256)
+                .unwrap();
 
         trusted_authority.sign(random_public_key!(), 0).unwrap();
     }
 
     #[test]
     fn verifying() {
-        let trusted_authority = TrustedAuthority::try_from_private_key(random_private_key!(), HashFunction::Sha256).unwrap();
+        let trusted_authority =
+            TrustedAuthority::try_from_private_key(random_private_key!(), HashFunction::Sha256)
+                .unwrap();
 
         let public_key = random_public_key!();
         let signed_key = trusted_authority.sign(public_key.clone(), 0).unwrap();

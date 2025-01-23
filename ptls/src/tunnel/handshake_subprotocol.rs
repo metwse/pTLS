@@ -5,6 +5,7 @@ use crate::{
         handshake::{self, ClientHello, HandshakeContentType, HandshakeError, ServerHello},
         ContentType,
     },
+    trusted_authority::SignedPublicKey,
 };
 use rsa::{
     pkcs8::{DecodePublicKey, EncodePublicKey},
@@ -81,7 +82,6 @@ where
                         expries_at: signed_public.expries_at,
                         padding_hf: self.local_decrypt.hash_type() as u8,
                         signature_hf: self.local_signing.hash_type() as u8,
-                        trusted_authority_id: signed_public.trusted_authority_id,
                         signature: signed_public.signature.clone(),
                     };
 
@@ -137,14 +137,24 @@ where
             return Err(Error::Handshake(HandshakeError::InvalidContentType));
         }
 
+        // Server public key verification
         let server_hello: ServerHello =
             bincode::deserialize(&payload[1..]).map_err(|_| Error::InvalidPayload)?;
-
-        // TODO: certificate verification
 
         let server_public = RsaPublicKey::from_public_key_der(&server_hello.public_key)
             .map_err(|_| Error::Handshake(HandshakeError::InappropriatePublicKey))?;
 
+        let signed_public_key = SignedPublicKey {
+            public_key: server_public,
+            expries_at: server_hello.expries_at,
+            signature: server_hello.signature,
+        };
+
+        self.trusted_authority.verify(&signed_public_key)?;
+
+        let server_public = signed_public_key.public_key;
+
+        // Sets appropriate encrypt and verifing functions.
         self.peer_encrypt = Some(EncryptFunction::try_new(
             &HashFunction::try_from(server_hello.padding_hf)?,
             server_public.clone(),

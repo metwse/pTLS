@@ -106,7 +106,6 @@ pub struct ServerHello {
     pub expries_at: i64,
     pub signature_hf: u8,
     pub padding_hf: u8,
-    pub trusted_authority_id: u64,
     /// The signature provided by trusted authority for verifying the
     /// public_key and its expriation timestamp.
     pub signature: Vec<u8>,

@@ -39,7 +39,6 @@ macro_rules! hash_enums {
             )*
         }
     };
-
     (@define_hash_functions [$( ($hash_function:ident, $id:expr) ),*]) => {
         /// Hash functions supported by pTLS.
         #[allow(unused)]

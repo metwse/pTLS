@@ -2,14 +2,16 @@
 async fn full_handshake() {
     use super::*;
 
-    let (mut server, mut peer) = tunnel_pair!();
+    let trusted_authority_private_key = random_private_key!();
+    let trusted_authority = trusted_authority!(trusted_authority_private_key);
+    let (mut server, mut peer) = tunnel_pair!(trusted_authority);
 
-    server.set_signed_public_key(Arc::new(SignedPublicKey {
-        public_key: RsaPublicKey::from((*server.local_decrypt).as_ref()),
-        expries_at: 0,
-        trusted_authority_id: 0,
-        signature: vec![],
-    }));
+    let server_private_key = (*server.local_decrypt).as_ref();
+    let server_public_key = RsaPublicKey::from(server_private_key);
+
+    server.set_signed_public_key(Arc::new(
+        trusted_authority.sign(server_public_key, i64::MAX).unwrap(),
+    ));
 
     tokio::select! {
         result = peer.full_handshake() => result.unwrap(),

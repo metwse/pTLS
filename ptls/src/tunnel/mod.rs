@@ -1,13 +1,17 @@
 #[macro_use]
-mod macros;
-
+#[cfg(test)]
+mod test_macros;
 mod encrypted_tunnel;
 mod error;
 mod handshake_subprotocol;
 #[cfg(test)]
 mod tests;
 
-use crate::{crypto::hash_functions::*, io_wrapper::IoWrapper};
+use crate::{
+    crypto::hash_functions::*,
+    io_wrapper::IoWrapper,
+    trusted_authority::{SignedPublicKey, TrustedAuthority},
+};
 use rsa::RsaPublicKey;
 use std::sync::Arc;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
@@ -27,16 +31,7 @@ pub enum TunnelState {
     GracefullyDisconnected,
 }
 
-/// Wraps the public key that signed by a trusted authority.
-pub struct SignedPublicKey {
-    pub public_key: RsaPublicKey,
-    pub expries_at: i64,
-    pub trusted_authority_id: u64,
-    pub signature: Vec<u8>,
-}
-
 /// An encrypted tunnel that implements pTLS methods and manages connection states.
-#[allow(unused)]
 pub struct Tunnel<R, W> {
     io_wrapper: IoWrapper<R, W>,
     signed_public: Option<Arc<SignedPublicKey>>,
@@ -44,7 +39,7 @@ pub struct Tunnel<R, W> {
     local_signing: Arc<SigningFunction>,
     peer_encrypt: Option<EncryptFunction>,
     peer_verifying: Option<VerifyingFunction>,
-    state: TunnelState,
+    trusted_authority: Arc<TrustedAuthority>,
 }
 
 impl<R, W> Tunnel<R, W>
@@ -57,6 +52,7 @@ where
         (r, w): (R, W),
         local_decrypt: Arc<DecryptFunction>,
         local_signing: Arc<SigningFunction>,
+        trusted_authority: Arc<TrustedAuthority>,
     ) -> Self {
         Self {
             io_wrapper: IoWrapper::new((r, w)),
@@ -65,7 +61,7 @@ where
             local_signing,
             peer_encrypt: None,
             peer_verifying: None,
-            state: TunnelState::Handshake,
+            trusted_authority,
         }
     }
 

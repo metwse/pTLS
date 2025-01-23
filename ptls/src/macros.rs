@@ -1,4 +1,3 @@
-
 // Implements From<$error> for $self
 macro_rules! error_impl_from {
     ($self:ident; $( $ident:ident ),*) => {
@@ -14,7 +13,6 @@ macro_rules! error_impl_from {
     };
 }
 
-
 #[cfg(test)]
 #[macro_use]
 mod test_util {
@@ -28,6 +26,7 @@ mod test_util {
         }};
     }
 
+    #[allow(unused)]
     macro_rules! random_key_pair {
         () => {
             random_key_pair!(1024)
