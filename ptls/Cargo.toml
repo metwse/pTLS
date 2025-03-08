@@ -1,6 +1,6 @@
 [package]
 name = "ptls"
-version = "0.0.0"
+version = "0.1.0"
 edition = "2021"
 license = "Apache-2.0 OR MIT"
 description = "pTLS is a lightweigh TLS library."
@@ -10,10 +10,11 @@ exclude = ["tests/**"]
 
 [dependencies]
 tokio = { workspace = true }
-serde = { workspace = true }
 rsa = { workspace = true }
 rand = { workspace = true }
 paste = { workspace = true }
+serde = { workspace = true }
+bincode = { workspace = true }
 
 [dev-dependencies]
-tokio = { version = "1", features = ["full"] }
+tokio = { workspace = true, features = ["full"] }

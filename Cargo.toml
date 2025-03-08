@@ -12,8 +12,10 @@ resolver = "2"
 
 
 [workspace.dependencies]
-tokio = { version = "1", features = ["io-util", "net", "sync", "time", "macros"] }
+tokio = { version = "1", features = ["io-util", "sync"] }
 serde = { version = "1", features = ["derive"] }
-rsa = "0.9"
-rand = "0.8"
+rsa = { version = "0.9", features = ["sha2", "serde"] }
+rand = { version = "0.8", features = ["getrandom"] }
+bincode = "1.3"
+tracing = "0.1"
 paste = "1"
