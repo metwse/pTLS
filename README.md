@@ -1,4 +1,5 @@
 # pTLS
+\[discontinued, new version is available in another repository\]
 
 ## Status
 pTLS is currently unstable. The 0.1.x versions will include both API changes
